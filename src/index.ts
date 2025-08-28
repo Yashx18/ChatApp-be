@@ -1,19 +1,48 @@
-import { WebSocketServer } from "ws";
+import { WebSocket, WebSocketServer } from "ws";
 
 const wss = new WebSocketServer({ port: 8080 });
-let user = 0;
-let allSockets = [];
+interface Users {
+  socket: WebSocket;
+  roomId: string;
+}
+let allSockets: Users[] = [];
 wss.on("connection", (socket) => {
   console.log("User Connected");
-  socket.send("Connection Established !!")
-  allSockets.push(socket);
-  user++;
+  socket.send("Connection Established !!");
+
   socket.on("message", (message) => {
-    console.log(message);
-    setTimeout(() => {
-      allSockets.forEach((s) => {
-        s.send(`${message}: came back from server.`);
+    const parsedMessage = JSON.parse(message as unknown as string);
+    if (parsedMessage.type === "join") {
+      allSockets.push({
+        socket,
+        roomId: parsedMessage.payload.roomId,
       });
-    }, 500);
+      const currentUserRoom = allSockets.find(
+        (x) => x.socket == socket
+      )?.roomId;
+      for (let i = 0; i < allSockets.length; i++) {
+        if (allSockets[i]?.roomId == currentUserRoom) {
+          allSockets[i]?.socket.send(
+            `${parsedMessage.payload.name} joined room: ${currentUserRoom}`
+          );
+        }
+      }
+    }
+
+    if (parsedMessage.type === "chat") {
+      const currentUserRoom = allSockets.find(
+        (x) => x.socket == socket
+      )?.roomId;
+
+      console.log(currentUserRoom);
+      for (let i = 0; i < allSockets.length; i++) {
+        if (allSockets[i]?.roomId == currentUserRoom) {
+          const message = parsedMessage.payload.message;
+          allSockets[i]?.socket.send(
+            `${parsedMessage.payload.name} sent ${message}`
+          );
+        }
+      }
+    }
   });
 });
