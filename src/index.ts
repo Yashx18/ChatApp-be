@@ -7,9 +7,6 @@ interface Users {
 }
 let allSockets: Users[] = [];
 wss.on("connection", (socket) => {
-  console.log("User Connected");
-  socket.send("Connection Established !!");
-
   socket.on("message", (message) => {
     const parsedMessage = JSON.parse(message as unknown as string);
     if (parsedMessage.type === "join") {
