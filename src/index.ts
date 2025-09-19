@@ -68,18 +68,18 @@ wss.on("connection", (socket) => {
       const roomId = allSockets[userIndex]?.roomId;
       allSockets.splice(userIndex, 1);
 
-      // const socketsInRoom = allSockets.filter((x) => x.roomId === roomId);
-      // const usersInARoom = socketsInRoom.length;
+      const socketsInRoom = allSockets.filter((x) => x.roomId === roomId);
+      const usersInARoom = socketsInRoom.length;
 
-      // for (const user of socketsInRoom) {
-      //   user.socket.send(
-      //     JSON.stringify({
-      //       type: "system",
-      //       message: `A user left room: ${roomId}`,
-      //       userCount: usersInARoom,
-      //     })
-      //   );
-      // }
+      for (const user of socketsInRoom) {
+        user.socket.send(
+          JSON.stringify({
+            type: "system",
+            message: `A user left room: ${roomId}`,
+            userCount: usersInARoom,
+          })
+        );
+      }
     }
   });
 });
