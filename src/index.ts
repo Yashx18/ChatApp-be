@@ -5,6 +5,7 @@ const wss = new WebSocketServer({ port: 8080 });
 interface Users {
   socket: WebSocket;
   roomId: string;
+  name: string; // ✅ add name
 }
 let allSockets: Users[] = [];
 
@@ -17,7 +18,7 @@ wss.on("connection", (socket) => {
         const roomId = parsedMessage.payload.roomId;
         const name = parsedMessage.payload.name;
 
-        allSockets.push({ socket, roomId });
+        allSockets.push({ socket, roomId, name }); // ✅ store name
 
         const socketsInRoom = allSockets.filter((x) => x.roomId === roomId);
         const usersInARoom = socketsInRoom.length;
@@ -26,7 +27,7 @@ wss.on("connection", (socket) => {
           user.socket.send(
             JSON.stringify({
               type: "system",
-              message: `${name} joined room: ${roomId}`,
+              message: `${name} joined room`,
               userCount: usersInARoom,
             })
           );
@@ -34,13 +35,11 @@ wss.on("connection", (socket) => {
       }
 
       if (parsedMessage.type === "chat") {
-        const currentUserRoom = allSockets.find(
-          (x) => x.socket === socket
-        )?.roomId;
-        if (!currentUserRoom) return;
+        const currentUser = allSockets.find((x) => x.socket === socket);
+        if (!currentUser) return;
 
         const socketsInRoom = allSockets.filter(
-          (x) => x.roomId === currentUserRoom
+          (x) => x.roomId === currentUser.roomId
         );
         const usersInARoom = socketsInRoom.length;
 
@@ -65,7 +64,7 @@ wss.on("connection", (socket) => {
   socket.on("close", () => {
     const userIndex = allSockets.findIndex((x) => x.socket === socket);
     if (userIndex !== -1) {
-      const roomId = allSockets[userIndex]?.roomId;
+      const { roomId, name } = allSockets[userIndex]!; // ✅ get name before removing
       allSockets.splice(userIndex, 1);
 
       const socketsInRoom = allSockets.filter((x) => x.roomId === roomId);
@@ -75,7 +74,7 @@ wss.on("connection", (socket) => {
         user.socket.send(
           JSON.stringify({
             type: "system",
-            message: `A user left room: ${roomId}`,
+            message: `${name} left room`, // ✅ use correct name
             userCount: usersInARoom,
           })
         );
