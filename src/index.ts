@@ -64,7 +64,7 @@ wss.on("connection", (socket) => {
   socket.on("close", () => {
     const userIndex = allSockets.findIndex((x) => x.socket === socket);
     if (userIndex !== -1) {
-      const { roomId, name } = allSockets[userIndex]!; // ✅ get name before removing
+      const { roomId, name } = allSockets[userIndex]!; 
       allSockets.splice(userIndex, 1);
 
       const socketsInRoom = allSockets.filter((x) => x.roomId === roomId);
@@ -74,7 +74,7 @@ wss.on("connection", (socket) => {
         user.socket.send(
           JSON.stringify({
             type: "system",
-            message: `${name} left room`, // ✅ use correct name
+            message: `${name} left room`, 
             userCount: usersInARoom,
           })
         );
