@@ -29,6 +29,7 @@ wss.on("connection", (socket) => {
     try {
       const parsedMessage = JSON.parse(message.toString());
 
+      // Join room
       if (parsedMessage.type === "join") {
         const roomId = parsedMessage.payload.roomId;
         const name = parsedMessage.payload.name;
@@ -49,9 +50,10 @@ wss.on("connection", (socket) => {
           );
         }
 
-        broadcastRooms(); // 🔥 notify all clients about updated rooms
+        broadcastRooms();
       }
 
+      // Chat message
       if (parsedMessage.type === "chat") {
         const currentUser = allSockets.find((x) => x.socket === socket);
         if (!currentUser) return;
@@ -63,11 +65,12 @@ wss.on("connection", (socket) => {
 
         for (const user of socketsInRoom) {
           if (user.socket !== socket) {
+            // 🔥 send the sender's actual name, not parsedMessage.name
             user.socket.send(
               JSON.stringify({
                 type: "chat",
-                name: parsedMessage.payload.name,
-                message: parsedMessage.payload.message,
+                name: currentUser.name,
+                message: parsedMessage.message,
                 userCount: usersInARoom,
               })
             );
@@ -75,6 +78,7 @@ wss.on("connection", (socket) => {
         }
       }
 
+      // Get rooms
       if (parsedMessage.type === "getRooms") {
         socket.send(
           JSON.stringify({
@@ -98,7 +102,7 @@ wss.on("connection", (socket) => {
       const usersInARoom = socketsInRoom.length;
 
       if (usersInARoom === 0) {
-        availableRooms.delete(roomId); // ❌ remove empty room
+        availableRooms.delete(roomId);
       }
 
       for (const user of socketsInRoom) {
@@ -111,7 +115,7 @@ wss.on("connection", (socket) => {
         );
       }
 
-      broadcastRooms(); // 🔥 update all clients
+      broadcastRooms();
     }
   });
 });
